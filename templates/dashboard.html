@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<title>Log Analyzer - Dashboard</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  body { font-family: Segoe UI, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 20px; }
+  h1 { margin-top: 0; }
+  .cards { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .card { flex: 1; min-width: 140px; padding: 16px; border-radius: 8px; background: #1e293b; }
+  .card .n { font-size: 32px; font-weight: bold; }
+  .CRITICAL { color: #f43f5e; } .HIGH { color: #fb923c; }
+  .MEDIUM { color: #facc15; } .LOW { color: #60a5fa; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .box { background: #1e293b; border-radius: 8px; padding: 10px; }
+  table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
+  th { background: #334155; }
+  button { background: #3b82f6; color: white; border: 0; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+  .banner { background: #7f1d1d; border: 1px solid #f43f5e; padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none; }
+</style>
+</head>
+<body>
+<h1>Log Analyzer: Zbulim sulmesh <button onclick="rescan()">Skano përsëri</button></h1>
+<div class="banner" id="banner"></div>
+<div class="cards" id="cards"></div>
+<div class="grid">
+  <div class="box"><div id="topips"></div></div>
+  <div class="box"><div id="timeline"></div></div>
+</div>
+<h2>Alarmet</h2>
+<table>
+  <thead><tr><th>Ashpërsia</th><th>Lloji</th><th>IP</th><th>Detaje</th><th>Koha</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<script>
+const layout = { paper_bgcolor: "#1e293b", plot_bgcolor: "#1e293b", font: { color: "#e2e8f0" }, margin: { t: 40, l: 120, r: 20, b: 40 } };
+
+async function load() {
+  const d = await (await fetch("/api/data")).json();
+
+  document.getElementById("cards").innerHTML = ["CRITICAL","HIGH","MEDIUM","LOW"].map(s =>
+    `<div class="card"><div class="n ${s}">${d.severity[s] || 0}</div>${s}</div>`).join("");
+
+  const crit = d.alerts.filter(a => a.severity === "CRITICAL");
+  const banner = document.getElementById("banner");
+  if (crit.length) {
+    banner.style.display = "block";
+    banner.textContent = "⚠ ALARM KRITIK: " + crit.map(a => a.ip + " - " + a.details).join(" | ");
+  } else { banner.style.display = "none"; }
+
+  Plotly.newPlot("topips", [{
+    type: "bar", orientation: "h",
+    y: d.top_ips.map(x => x[0]).reverse(), x: d.top_ips.map(x => x[1]).reverse(),
+    marker: { color: "#fb923c" }
+  }], { ...layout, title: "IP-të më të dyshimta" });
+
+  Plotly.newPlot("timeline", [{
+    type: "scatter", mode: "lines+markers",
+    x: d.timeline.map(x => x[0]), y: d.timeline.map(x => x[1]),
+    line: { color: "#60a5fa" }
+  }], { ...layout, title: "Alarmet në kohë", margin: { t: 40, l: 40, r: 20, b: 60 } });
+
+  document.getElementById("rows").innerHTML = d.alerts.map(a =>
+    `<tr><td class="${a.severity}"><b>${a.severity}</b></td><td>${a.kind}</td><td>${a.ip}</td><td>${a.details}</td><td>${a.time.replace("T"," ")}</td></tr>`).join("");
+}
+
+async function rescan() {
+  await fetch("/api/rescan", { method: "POST" });
+  load();
+}
+
+load();
+setInterval(load, 10000);
+</script>
+</body>
+</html>
