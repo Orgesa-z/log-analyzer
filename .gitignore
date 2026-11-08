@@ -1,6 +1,7 @@
-venv/
+﻿venv/
 __pycache__/
 *.pyc
 alerts.db
 logs/
-.vscode/bad_ips.txt
+.vscode/
+bad_ips.txt
