@@ -29,6 +29,7 @@
   <div class="box"><div id="topips"></div></div>
   <div class="box"><div id="timeline"></div></div>
 </div>
+<div class="box" style="margin-bottom:20px"><div id="map"></div></div>
 <h2>Alarmet</h2>
 <table>
   <thead><tr><th>Ashpërsia</th><th>Lloji</th><th>IP</th><th>Abuse score</th><th>Detaje</th><th>Koha</th></tr></thead>
@@ -68,6 +69,20 @@ async function load() {
     x: d.timeline.map(x => x[0]), y: d.timeline.map(x => x[1]),
     line: { color: "#60a5fa" }
   }], { ...layout, title: "Alarmet në kohë", margin: { t: 40, l: 40, r: 20, b: 60 } });
+
+  Plotly.newPlot("map", [{
+    type: "choropleth", locationmode: "ISO-3",
+    locations: d.countries.map(x => x[0]),
+    z: d.countries.map(x => x[1]),
+    colorscale: [[0, "#fdba74"], [1, "#f43f5e"]],
+    colorbar: { title: "Alarme" },
+    hovertemplate: "%{location}: %{z} alarme<extra></extra>"
+  }], {
+    paper_bgcolor: "#1e293b", font: { color: "#e2e8f0" },
+    title: "Nga vijnë sulmet", margin: { t: 40, l: 10, r: 10, b: 10 }, height: 420,
+    geo: { bgcolor: "#1e293b", showframe: false, showland: true, landcolor: "#334155",
+           showcountries: true, countrycolor: "#475569", projection: { type: "natural earth" } }
+  });
 
   document.getElementById("rows").innerHTML = d.alerts.map(a =>
     `<tr><td class="${a.severity}"><b>${a.severity}</b></td><td>${a.kind}</td><td>${a.ip}</td><td>${abuse(a.abuse)}</td><td>${a.details}</td><td>${a.time.replace("T"," ")}</td></tr>`).join("");

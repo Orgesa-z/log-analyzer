@@ -1,6 +1,7 @@
 import sqlite3
 from collections import Counter
 
+import pycountry
 from flask import Flask, jsonify, render_template
 
 import detector
@@ -17,6 +18,13 @@ def get_alerts():
     return [dict(r) for r in rows]
 
 
+def iso3(code):
+    try:
+        return pycountry.countries.get(alpha_2=code).alpha_3
+    except Exception:
+        return None
+
+
 @app.route("/")
 def index():
     return render_template("dashboard.html")
@@ -31,12 +39,22 @@ def data():
     top_ips = Counter(a["ip"] for a in alerts).most_common(8)
     kinds = Counter(a["kind"] for a in alerts)
     timeline = Counter(a["time"][:13] + ":00" for a in alerts)
+
+    countries = Counter()
+    for a in alerts:
+        ab = a.get("abuse")
+        if ab and ab.get("country"):
+            code = iso3(ab["country"])
+            if code:
+                countries[code] += 1
+
     return jsonify({
         "alerts": alerts,
         "severity": dict(sev),
         "top_ips": top_ips,
         "kinds": dict(kinds),
         "timeline": sorted(timeline.items()),
+        "countries": list(countries.items()),
     })
 
 
