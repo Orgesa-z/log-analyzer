@@ -4,8 +4,9 @@ from datetime import datetime, timedelta
 random.seed(42)
 
 NORMAL_IPS = [f"192.168.1.{i}" for i in range(10, 40)]
-ATTACKER_SSH = ["45.155.205.233", "185.220.101.45", "103.145.12.88"]
-ATTACKER_WEB = ["91.240.118.172", "194.26.135.60", "141.98.11.5"]
+BAD = open("bad_ips.txt").read().split()
+ATTACKER_SSH = BAD[:3]
+ATTACKER_WEB = BAD[3:6]
 USERS_REAL = ["orgesa", "admin", "deploy"]
 USERS_FAKE = ["root", "admin", "test", "oracle", "ubuntu", "postgres", "user", "pi"]
 

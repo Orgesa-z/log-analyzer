@@ -4,6 +4,7 @@ from collections import Counter
 from flask import Flask, jsonify, render_template
 
 import detector
+import reputation
 
 app = Flask(__name__)
 
@@ -24,6 +25,8 @@ def index():
 @app.route("/api/data")
 def data():
     alerts = get_alerts()
+    for a in alerts:
+        a["abuse"] = reputation.check(a["ip"])
     sev = Counter(a["severity"] for a in alerts)
     top_ips = Counter(a["ip"] for a in alerts).most_common(8)
     kinds = Counter(a["kind"] for a in alerts)

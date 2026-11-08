@@ -3,4 +3,4 @@ __pycache__/
 *.pyc
 alerts.db
 logs/
-.vscode/
+.vscode/bad_ips.txt

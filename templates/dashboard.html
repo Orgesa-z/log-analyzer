@@ -31,12 +31,18 @@
 </div>
 <h2>Alarmet</h2>
 <table>
-  <thead><tr><th>Ashpërsia</th><th>Lloji</th><th>IP</th><th>Detaje</th><th>Koha</th></tr></thead>
+  <thead><tr><th>Ashpërsia</th><th>Lloji</th><th>IP</th><th>Abuse score</th><th>Detaje</th><th>Koha</th></tr></thead>
   <tbody id="rows"></tbody>
 </table>
 
 <script>
 const layout = { paper_bgcolor: "#1e293b", plot_bgcolor: "#1e293b", font: { color: "#e2e8f0" }, margin: { t: 40, l: 120, r: 20, b: 40 } };
+
+function abuse(x) {
+  if (!x) return "-";
+  const c = x.score >= 75 ? "#f43f5e" : x.score >= 25 ? "#facc15" : "#4ade80";
+  return `<b style="color:${c}">${x.score}%</b> ${x.country || ""} (${x.reports} raporte)`;
+}
 
 async function load() {
   const d = await (await fetch("/api/data")).json();
@@ -64,7 +70,7 @@ async function load() {
   }], { ...layout, title: "Alarmet në kohë", margin: { t: 40, l: 40, r: 20, b: 60 } });
 
   document.getElementById("rows").innerHTML = d.alerts.map(a =>
-    `<tr><td class="${a.severity}"><b>${a.severity}</b></td><td>${a.kind}</td><td>${a.ip}</td><td>${a.details}</td><td>${a.time.replace("T"," ")}</td></tr>`).join("");
+    `<tr><td class="${a.severity}"><b>${a.severity}</b></td><td>${a.kind}</td><td>${a.ip}</td><td>${abuse(a.abuse)}</td><td>${a.details}</td><td>${a.time.replace("T"," ")}</td></tr>`).join("");
 }
 
 async function rescan() {
@@ -73,7 +79,7 @@ async function rescan() {
 }
 
 load();
-setInterval(load, 10000);
+setInterval(load, 60000);
 </script>
 </body>
 </html>
