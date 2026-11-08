@@ -1,5 +1,7 @@
 ﻿# Log Analyzer: Zbulim sulmesh
 
+![Dashboard](docs/dashboard.png)
+
 Mjet në Python që lexon log-e të serverit (SSH `auth.log` dhe nginx `access.log`), zbulon brute-force, skanime dhe injection, dhe i shfaq alarmet në një dashboard web me reputacionin e IP-ve nga AbuseIPDB.
 
 ## Çfarë zbulon
