@@ -5,3 +5,5 @@ alerts.db
 logs/
 .vscode/
 bad_ips.txt
+
+notified.json

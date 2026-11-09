@@ -1,9 +1,13 @@
+import json
 import re
 import sqlite3
 from collections import defaultdict
 from datetime import timedelta
 
+from notify import send_email
 from parsers import parse_ssh, parse_nginx
+
+NOTIFIED_FILE = "notified.json"
 
 # ---- Pragjet (mund t'i ndryshosh) ----
 SSH_FAILS_THRESHOLD = 10           # N login të dështuar...
@@ -104,6 +108,32 @@ def save_alerts(alerts, db="alerts.db"):
     con.close()
 
 
+def notify_critical(alerts):
+    """Dërgon email vetëm për alarme CRITICAL që nuk janë njoftuar më parë."""
+    try:
+        with open(NOTIFIED_FILE) as f:
+            seen = set(json.load(f))
+    except (FileNotFoundError, json.JSONDecodeError):
+        seen = set()
+
+    for a in alerts:
+        if a["severity"] != "CRITICAL":
+            continue
+        key = f"{a['ip']}|{a['kind']}|{a['time']}"
+        if key in seen:
+            continue
+        ok = send_email(
+            f"[CRITICAL] {a['kind']} nga {a['ip']}",
+            f"{a['details']}\n\nKoha: {a['time']}\nIP: {a['ip']}\n\n"
+            f"Kontrollo dashboard-in dhe konsidero bllokimin e kësaj IP.",
+        )
+        if ok:
+            seen.add(key)
+
+    with open(NOTIFIED_FILE, "w") as f:
+        json.dump(sorted(seen), f)
+
+
 def run():
     alerts = []
     detect_ssh_bruteforce(parse_ssh("logs/auth.log"), alerts)
@@ -111,6 +141,7 @@ def run():
     order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
     alerts.sort(key=lambda a: order[a["severity"]])
     save_alerts(alerts)
+    notify_critical(alerts)
     return alerts
 
 
