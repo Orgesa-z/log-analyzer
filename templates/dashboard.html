@@ -31,6 +31,13 @@
 </div>
 <div class="box" style="margin-bottom:20px"><div id="map"></div></div>
 <h2>Alarmet</h2>
+<div style="margin-bottom:10px;display:flex;gap:10px">
+  <select id="sev" onchange="render()" style="padding:6px;border-radius:6px;background:#1e293b;color:#e2e8f0;border:1px solid #334155">
+    <option value="">Të gjitha</option>
+    <option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option>
+  </select>
+  <input id="q" oninput="render()" placeholder="Kërko IP ose lloj..." style="padding:6px;border-radius:6px;background:#1e293b;color:#e2e8f0;border:1px solid #334155;width:260px">
+</div>
 <table>
   <thead><tr><th>Ashpërsia</th><th>Lloji</th><th>IP</th><th>Abuse score</th><th>Detaje</th><th>Koha</th></tr></thead>
   <tbody id="rows"></tbody>
@@ -43,6 +50,18 @@ function abuse(x) {
   if (!x) return "-";
   const c = x.score >= 75 ? "#f43f5e" : x.score >= 25 ? "#facc15" : "#4ade80";
   return `<b style="color:${c}">${x.score}%</b> ${x.country || ""} (${x.reports} raporte)`;
+}
+
+let ALERTS = [];
+
+function render() {
+  const sev = document.getElementById("sev").value;
+  const q = document.getElementById("q").value.toLowerCase();
+  const list = ALERTS.filter(a =>
+    (!sev || a.severity === sev) &&
+    (!q || a.ip.includes(q) || a.kind.toLowerCase().includes(q)));
+  document.getElementById("rows").innerHTML = list.map(a =>
+    `<tr><td class="${a.severity}"><b>${a.severity}</b></td><td>${a.kind}</td><td>${a.ip}</td><td>${abuse(a.abuse)}</td><td>${a.details}</td><td>${a.time.replace("T"," ")}</td></tr>`).join("");
 }
 
 async function load() {
@@ -84,8 +103,8 @@ async function load() {
            showcountries: true, countrycolor: "#475569", projection: { type: "natural earth" } }
   });
 
-  document.getElementById("rows").innerHTML = d.alerts.map(a =>
-    `<tr><td class="${a.severity}"><b>${a.severity}</b></td><td>${a.kind}</td><td>${a.ip}</td><td>${abuse(a.abuse)}</td><td>${a.details}</td><td>${a.time.replace("T"," ")}</td></tr>`).join("");
+  ALERTS = d.alerts;
+  render();
 }
 
 async function rescan() {
