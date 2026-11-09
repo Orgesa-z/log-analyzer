@@ -19,6 +19,8 @@
   th { background: #334155; }
   button { background: #3b82f6; color: white; border: 0; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
   .banner { background: #7f1d1d; border: 1px solid #f43f5e; padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none; }
+  pre { background: #0f172a; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 13px; margin: 8px 0; }
+  .note { color: #94a3b8; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -30,6 +32,13 @@
   <div class="box"><div id="timeline"></div></div>
 </div>
 <div class="box" style="margin-bottom:20px"><div id="map"></div></div>
+
+<div class="box" style="margin-bottom:20px">
+  <h2 style="margin-top:4px">Sugjerime për bllokim <button onclick="copyBlock()" style="float:right">Kopjo</button></h2>
+  <div class="note">IP me alarm CRITICAL ose HIGH. Komandat nuk ekzekutohen vetë: kopjoji dhe ekzekutoji në serverin tënd Linux, pasi të kontrollosh që nuk është IP e jotja.</div>
+  <pre id="blocklist">-</pre>
+</div>
+
 <h2>Alarmet</h2>
 <div style="margin-bottom:10px;display:flex;gap:10px">
   <select id="sev" onchange="render()" style="padding:6px;border-radius:6px;background:#1e293b;color:#e2e8f0;border:1px solid #334155">
@@ -52,7 +61,26 @@ function abuse(x) {
   return `<b style="color:${c}">${x.score}%</b> ${x.country || ""} (${x.reports} raporte)`;
 }
 
+function isPrivate(ip) {
+  return /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(ip);
+}
+
 let ALERTS = [];
+let BLOCK_TEXT = "";
+
+function blocklist() {
+  const ips = [...new Set(ALERTS
+    .filter(a => (a.severity === "CRITICAL" || a.severity === "HIGH") && !isPrivate(a.ip))
+    .map(a => a.ip))];
+  BLOCK_TEXT = ips.length
+    ? "# Sugjerime: shiko çdo IP para se ta ekzekutosh\n" + ips.map(ip => `sudo ufw deny from ${ip} to any`).join("\n")
+    : "Asnjë IP për bllokim.";
+  document.getElementById("blocklist").textContent = BLOCK_TEXT;
+}
+
+function copyBlock() {
+  navigator.clipboard.writeText(BLOCK_TEXT);
+}
 
 function render() {
   const sev = document.getElementById("sev").value;
@@ -105,6 +133,7 @@ async function load() {
 
   ALERTS = d.alerts;
   render();
+  blocklist();
 }
 
 async function rescan() {
