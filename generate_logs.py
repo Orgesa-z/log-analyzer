@@ -1,12 +1,20 @@
+import os
 import random
 from datetime import datetime, timedelta
 
 random.seed(42)
 
 NORMAL_IPS = [f"192.168.1.{i}" for i in range(10, 40)]
-BAD = open("bad_ips.txt").read().split()
+
+# IP të vërteta nga AbuseIPDB (nëse ekziston bad_ips.txt), përndryshe IP shembull
+DEFAULT_BAD = ["203.0.113.10", "203.0.113.20", "203.0.113.30",
+               "198.51.100.10", "198.51.100.20", "198.51.100.30"]
+BAD = open("bad_ips.txt").read().split() if os.path.exists("bad_ips.txt") else []
+if len(BAD) < 6:
+    BAD = DEFAULT_BAD
 ATTACKER_SSH = BAD[:3]
 ATTACKER_WEB = BAD[3:6]
+
 USERS_REAL = ["orgesa", "admin", "deploy"]
 USERS_FAKE = ["root", "admin", "test", "oracle", "ubuntu", "postgres", "user", "pi"]
 
@@ -68,7 +76,7 @@ def gen_auth():
                 events.append((t, f"{ssh_ts(t)} server sshd[{pid}]: Failed password for {user} from {ip} port {port} ssh2"))
             else:
                 events.append((t, f"{ssh_ts(t)} server sshd[{pid}]: Failed password for invalid user {user} from {ip} port {port} ssh2"))
-        # Attacker finally gets in (for one IP)
+    # Attacker finally gets in (for one IP)
     t = start + timedelta(hours=5, minutes=20)
     ip = ATTACKER_SSH[0]
     events.append((t, f"{ssh_ts(t)} server sshd[9999]: Accepted password for root from {ip} port 44321 ssh2"))
@@ -118,6 +126,7 @@ def gen_nginx():
 
 
 if __name__ == "__main__":
+    os.makedirs("logs", exist_ok=True)
     gen_auth()
     gen_nginx()
     print("Gati! Shiko dosjen logs/")
