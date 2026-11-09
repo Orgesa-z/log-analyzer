@@ -2,7 +2,17 @@
 
 ![Dashboard](docs/dashboard.png)
 
-Mjet në Python që lexon log-e të serverit (SSH `auth.log` dhe nginx `access.log`), zbulon brute-force, skanime dhe injection, dhe i shfaq alarmet në një dashboard web me reputacionin e IP-ve nga AbuseIPDB.
+Mjet në Python që lexon log-e të serverit (SSH `auth.log` dhe nginx `access.log`), zbulon brute-force, skanime dhe injection, dhe i shfaq alarmet në një dashboard web me reputacionin e IP-ve nga AbuseIPDB dhe hartën e vendeve nga vijnë sulmet.
+
+## Funksionet
+
+- Parsera me regex për SSH dhe nginx
+- Detektor me rregulla dhe dritare rrëshqitëse për brute-force
+- Alarme me ashpërsi: CRITICAL, HIGH, MEDIUM, LOW (të ruajtura në SQLite)
+- Dashboard me karta, grafikë Plotly dhe tabelë alarmesh
+- Filtër sipas ashpërsisë dhe kërkim sipas IP ose llojit të sulmit
+- Reputacioni i IP-ve nga AbuseIPDB (score, vendi, numri i raporteve)
+- Hartë botërore me vendet nga vijnë sulmet
 
 ## Çfarë zbulon
 
@@ -24,10 +34,10 @@ auth.log / access.log -> parsers.py -> detector.py -> alerts.db (SQLite) -> app.
 ```
 
 - `parsers.py`: parsera me regex që i kthejnë rreshtat në ngjarje të strukturuara
-- `detector.py`: rregullat e detektimit (dritare rrëshqitëse për brute-force) dhe ruajtja e alarmeve
-- `reputation.py`: kontrollon IP-të te AbuseIPDB (score, vendi, numri i raporteve)
-- `app.py`: server Flask me API (`/api/data`, `/api/rescan`)
-- `templates/dashboard.html`: dashboard me karta, grafikë Plotly dhe tabelë alarmesh
+- `detector.py`: rregullat e detektimit dhe ruajtja e alarmeve
+- `reputation.py`: kontrollon IP-të te AbuseIPDB
+- `app.py`: server Flask me API (`/api/data`, `/api/rescan`); `pycountry` i kthen kodet e vendeve për hartën
+- `templates/dashboard.html`: dashboard-i (karta, grafikë, hartë, tabelë me filtra)
 - `generate_logs.py`: gjenerator i log-eve të rreme me sulme brenda, për testim
 - `fetch_bad_ips.py`: merr IP të raportuara nga AbuseIPDB për demon
 
@@ -50,7 +60,7 @@ Merr një key falas te [abuseipdb.com](https://www.abuseipdb.com) (Account, API,
 $env:ABUSEIPDB_KEY="key-yt"
 ```
 
-Pa key, dashboard-i punon njësoj, por kolona "Abuse score" shfaq `-`.
+Pa key, dashboard-i punon njësoj, por kolona "Abuse score" shfaq `-` dhe harta del bosh.
 
 ### Nisja
 
@@ -72,6 +82,6 @@ Log-et e demos janë të gjeneruara. IP-të vijnë nga lista publike e AbuseIPDB
 
 ## Idetë për të ardhmen
 
-- Hartë gjeolokacioni e sulmeve
 - Njoftime me email/Telegram për alarme CRITICAL
-- Filtra dhe kërkim në tabelë
+- Analizë e log-eve të vërteta nga një server Linux
+- Sugjerime për bllokim IP (`ufw deny from`)
