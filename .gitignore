@@ -9,3 +9,5 @@ bad_ips.txt
 notified.json
 
 notified.json
+
+.pytest_cache/
