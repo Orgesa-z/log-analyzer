@@ -134,10 +134,10 @@ def notify_critical(alerts):
         json.dump(sorted(seen), f)
 
 
-def run():
+def run(log_dir="logs"):
     alerts = []
-    detect_ssh_bruteforce(parse_ssh("logs/auth.log"), alerts)
-    detect_web(parse_nginx("logs/access.log"), alerts)
+    detect_ssh_bruteforce(parse_ssh(f"{log_dir}/auth.log"), alerts)
+    detect_web(parse_nginx(f"{log_dir}/access.log"), alerts)
     order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
     alerts.sort(key=lambda a: order[a["severity"]])
     save_alerts(alerts)

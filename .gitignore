@@ -3,11 +3,8 @@ __pycache__/
 *.pyc
 alerts.db
 logs/
+logs_real/
 .vscode/
 bad_ips.txt
-
 notified.json
-
-notified.json
-
 .pytest_cache/

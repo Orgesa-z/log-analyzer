@@ -120,3 +120,28 @@ def test_web_normal_traffic_no_alert():
     events = [web_event(i, path="/index.html") for i in range(10)]
     detector.detect_web(events, alerts)
     assert alerts == []
+
+
+
+
+def test_parse_ssh_modern_iso_format(tmp_path):
+    f = tmp_path / "auth.log"
+    f.write_text(
+        "2026-11-10T06:44:15.170038+01:00 host sshd-session[1819]: Invalid user fakeuser14 from 127.0.0.1 port 40118\n",
+        encoding="utf-8",
+    )
+    events = parsers.parse_ssh(str(f))
+    assert len(events) == 1
+    assert events[0]["user"] == "fakeuser14"
+    assert events[0]["ip"] == "127.0.0.1"
+
+
+def test_parse_nginx_ipv6(tmp_path):
+    f = tmp_path / "access.log"
+    f.write_text(
+        '::1 - - [10/Nov/2026:06:44:31 +0100] "GET /.env HTTP/1.1" 404 162 "-" "curl/8.18.0"\n',
+        encoding="utf-8",
+    )
+    events = parsers.parse_nginx(str(f))
+    assert len(events) == 1
+    assert events[0]["ip"] == "::1"
